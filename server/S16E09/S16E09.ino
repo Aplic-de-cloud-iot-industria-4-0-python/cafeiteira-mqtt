@@ -6,10 +6,10 @@ const char* ssid = "Penelopecharmosa"; // REDE
 const char* password = "13275274";     // SENHA
 
 // MQTT Broker
-const char *mqtt_broker = "test.mosquitto.org";  // Host do broker
-const char *topic = "estevam/teste";            // Tópico a ser subscrito e publicado
-const char *mqtt_username = "";                 // Usuário
-const char *mqtt_password = "";                 // Senha
+const char *mqtt_broker = "b37.mqtt.one";  // Host do broker
+const char *topic = "2bqsvw6678/  ";            // Tópico a ser subscrito e publicado
+const char *mqtt_username = "2bqsvw6678";                 // Usuário
+const char *mqtt_password = "0efiqruwxy";                 // Senha
 const int mqtt_port = 1883;                     // Porta
 
 // Pino do relé
