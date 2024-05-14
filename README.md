@@ -17,7 +17,7 @@ Este é um projeto simples que demonstra como usar um ESP8266 para se comunicar 
 
 ## Configuração do Código
 
-![Texto alternativo](images/codigo.png)
+![Texto alternativo](src/public/images/codigo.png)
 
 * Código no esp8266
 
@@ -286,7 +286,7 @@ Este guia mostrará como configurar e utilizar o Mosquitto, um broker MQTT de c�
 
 2. Após a instalação, abra a pasta do Mosquitto.
 
-![Texto alternativo](images/diretorioMosquitto.png)
+![Texto alternativo](src/public/images/diretorioMosquitto.png)
 
 ### Inicializando o Servidor Mosquitto
 
@@ -301,7 +301,7 @@ Certifique-se de que o arquivo de configuração `mosquitto.conf` esteja present
 
 ### Utilizando `mosquitto_sub`
 
-![Texto alternativo](images/terminalMosquitto.png)
+![Texto alternativo](src/public/images/terminalMosquitto.png)
 
 1. Abra um novo terminal na pasta do Mosquitto. 
 2. Execute o comando `mosquitto_sub` para se inscrever em um tópico MQTT:
@@ -322,7 +322,7 @@ Certifique-se de manter o terminal do `mosquitto_sub` aberto para continuar ouvi
 
 ## Configuração do MQTTBox
 
-![Texto alternativo](images/configMQTTBox.png)
+![Texto alternativo](src/public/images/configMQTTBox.png)
 
 1. Abra o MQTTBox.
 
@@ -332,7 +332,7 @@ Certifique-se de manter o terminal do `mosquitto_sub` aberto para continuar ouvi
    - Nome de usuário e senha, se necessário, de acordo com as configurações do seu broker.
    - Host: Endereço do seu broker MQTT (por exemplo, "localhost:1883").
 
-![Texto alternativo](images/publish.png)
+![Texto alternativo](src/public/images/publish.png)
 
 3. Insira a mensagem a ser publicada:
    - Topic to publish: Insira o mesmo tópico que foi definido no código (por exemplo, "estevam/teste").
