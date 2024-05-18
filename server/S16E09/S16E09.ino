@@ -190,6 +190,6 @@ void dht_sensor_getdata() {
   String humString = String(hm, 2);
 
   // Publica os valores no broker MQTT
-  client.publish("temperatura2505", tempString.c_str());
-  client.publish("umidade2505", humString.c_str());
+  client.publish("2bqsvw6678/temperatura2505", tempString.c_str());
+  client.publish("2bqsvw6678/humidade2505", humString.c_str());
 }
