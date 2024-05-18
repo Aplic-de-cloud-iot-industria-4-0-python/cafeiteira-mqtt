@@ -1,9 +1,18 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include "DHT.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-// Parametros de conexão
+// Parametros de conexão WiFi e MQTT
 const char* ssid = "Penelopecharmosa"; // REDE
-const char* password = "13275274";     // SENHA
+const char* password = "13275274"; // SENHA
+
+const char* mqtt_broker = "b37.mqtt.one"; // Host do broker
+const char* topic = "2bqsvw6678/"; // Tópico a ser subscrito e publicado
+const char* mqtt_username = "2bqsvw6678"; // Usuário
+const char* mqtt_password = "0efiqruwxy"; // Senha
+const int mqtt_port = 1883; // Porta
 
 // MQTT Broker com MQTTBox e NQTTX com mosquitto -> Conectado
 // const char *mqtt_broker = "test.mosquitto.org";  // Host do broker
@@ -19,13 +28,6 @@ const char* password = "13275274";     // SENHA
 // const char *mqtt_password = "0efiqruwxy";                 // Senha
 // // const char *client_id = "mqttx_80be1b8f";                 // Senha
 // const int mqtt_port = 8083;                     // Porta
-
-MQTT ONE -> Utilizar um APP para ligar e desligar a cafeteira -> Conectado
-const char *mqtt_broker = "b37.mqtt.one";  // Host do broker
-const char *topic = "2bqsvw6678/";            // Tópico a ser subscrito e publicado
-const char *mqtt_username = "2bqsvw6678";                 // Usuário
-const char *mqtt_password = "0efiqruwxy";                 // Senha
-const int mqtt_port = 1883;                     // Porta
 
 // // iotbind -> Utilizar o app do IoTBind
 // const char *mqtt_broker = "b37.mqtt.one";  // Host do broker
@@ -45,6 +47,15 @@ const int mqtt_port = 1883;                     // Porta
 // Pino do relé
 const int relayPin = 52; // Use o pino correto para o relé
 
+// DHT sensor
+#define DHTTYPE DHT11 // DHT 11
+#define dht_dpin 0 // Pino de dados do DHT11
+DHT dht(dht_dpin, DHTTYPE); 
+int LED = 7; // Ajuste o pino LED se necessário
+
+// LCD
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
 // Variáveis
 bool mqttStatus = false;
 bool relayState = false; // Estado inicial do relé (desligado)
@@ -57,6 +68,7 @@ PubSubClient client(wifiClient);
 bool connectMQTT();
 void callback(char* topic, byte* payload, unsigned int length);
 void toggleRelay(bool state);
+void dht_sensor_getdata();
 
 void setup() {
   Serial.begin(9600);
@@ -77,15 +89,29 @@ void setup() {
   // Configuração do pino do relé
   pinMode(relayPin, OUTPUT);
   digitalWrite(relayPin, LOW); // Desliga o relé inicialmente
+
+  // Inicializa o sensor DHT
+  dht.begin();
+  
+  // Inicializa o display LCD
+  lcd.init();
+  lcd.backlight();
 }
 
 void loop() {
+  // Atualiza dados do sensor DHT e exibe no LCD
+  dht_sensor_getdata();
+  
+  // Mantém a conexão MQTT
   if (mqttStatus) {
     if (!client.connected()) {
-      connectMQTT();
+      mqttStatus = connectMQTT();
     }
     client.loop();
   }
+  
+  // Adiciona um pequeno delay para evitar leituras muito frequentes
+  delay(2000);
 }
 
 bool connectMQTT() {
@@ -95,8 +121,7 @@ bool connectMQTT() {
       Serial.println("Conexão bem-sucedida ao broker MQTT!");
       client.subscribe(topic);
       return true;
-    }
-    else {
+    } else {
       Serial.print("Falha ao conectar: ");
       Serial.println(client.state());
       Serial.print("Tentativa: ");
@@ -123,8 +148,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   if (message.equals("ligar")) {
     toggleRelay(false);
-  }
-  else if (message.equals("desligar")) {
+  } else if (message.equals("desligar")) {
     toggleRelay(true);
   }
 }
@@ -133,4 +157,31 @@ void toggleRelay(bool state) {
   relayState = state;
   digitalWrite(relayPin, state ? HIGH : LOW);
   client.publish(topic, state ? "ligado" : "desligado");
+}
+
+void dht_sensor_getdata() {
+  float hm = dht.readHumidity();
+  Serial.print("Umidade: ");
+  Serial.println(hm);
+  float temp = dht.readTemperature();
+  Serial.print("Temperatura: ");
+  Serial.println(temp);
+
+  // Atualiza o LED com base na umidade e temperatura lidas
+  if (temp > 30.0) {
+    digitalWrite(LED, LOW); // Liga o LED se a temperatura for maior que 30 graus
+  } else {
+    digitalWrite(LED, HIGH); // Desliga o LED se a temperatura for menor ou igual a 30 graus
+  }
+
+  // Exibe os valores no LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(temp);
+  lcd.print(" C");
+  lcd.setCursor(0, 1);
+  lcd.print("Umidade: ");
+  lcd.print(hm);
+  lcd.print(" %");
 }
