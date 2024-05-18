@@ -184,4 +184,12 @@ void dht_sensor_getdata() {
   lcd.print("Umidade: ");
   lcd.print(hm);
   lcd.print(" %");
+
+  // Converte os valores para String
+  String tempString = String(temp, 2);
+  String humString = String(hm, 2);
+
+  // Publica os valores no broker MQTT
+  client.publish("temperatura2505", tempString.c_str());
+  client.publish("umidade2505", humString.c_str());
 }
