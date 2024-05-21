@@ -56,6 +56,16 @@ int LED = 7; // Ajuste o pino LED se necessário
 // LCD
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
+// Sensor de água
+const int waterSensorPin = A1;  // Pino analógico onde o sensor de água está conectado
+int waterLevel;
+const int numReadings = 10;  // Número de leituras para fazer a média
+
+int readings[numReadings];   // Armazena as leituras analógicas
+int readIndex = 0;           // Índice da leitura atual
+int total = 0;               // Soma das leituras
+int average = 0;             // Média das leituras
+
 // Variáveis
 bool mqttStatus = false;
 bool relayState = false; // Estado inicial do relé (desligado)
@@ -69,6 +79,7 @@ bool connectMQTT();
 void callback(char* topic, byte* payload, unsigned int length);
 void toggleRelay(bool state);
 void dht_sensor_getdata();
+void water_sensor_getdata();
 
 void setup() {
   Serial.begin(9600);
@@ -96,11 +107,21 @@ void setup() {
   // Inicializa o display LCD
   lcd.init();
   lcd.backlight();
+
+  // Inicializa o sensor de água
+  pinMode(waterSensorPin, INPUT);
+  delay(100);
+  
+  // Inicializa todas as leituras com 0
+  for (int i = 0; i < numReadings; i++) {
+    readings[i] = 0;
+  }
 }
 
 void loop() {
   // Atualiza dados do sensor DHT e exibe no LCD
   dht_sensor_getdata();
+  water_sensor_getdata();
   
   // Mantém a conexão MQTT
   if (mqttStatus) {
@@ -181,7 +202,7 @@ void dht_sensor_getdata() {
   lcd.print(temp);
   lcd.print(" C");
   lcd.setCursor(0, 1);
-  lcd.print("Umidade: ");
+  lcd.print("Umid: ");
   lcd.print(hm);
   lcd.print(" %");
 
@@ -192,4 +213,42 @@ void dht_sensor_getdata() {
   // Publica os valores no broker MQTT
   client.publish("2bqsvw6678/temperatura2505", tempString.c_str());
   client.publish("2bqsvw6678/humidade2505", humString.c_str());
+}
+
+void water_sensor_getdata() {
+  // Subtrai a última leitura da soma
+  total = total - readings[readIndex];
+  
+  // Lê a nova leitura do sensor de água
+  readings[readIndex] = analogRead(waterSensorPin);
+  
+  // Adiciona a nova leitura à soma
+  total = total + readings[readIndex];
+  
+  // Atualiza o índice da leitura
+  readIndex = readIndex + 1;
+  
+  // Se estamos no final do array, volta ao início
+  if (readIndex >= numReadings) {
+    readIndex = 0;
+  }
+  
+  // Calcula a média
+  average = total / numReadings;
+
+  // Envia a média das leituras para o monitor serial
+  Serial.print("Nível de Água: ");
+  Serial.println(average);
+
+  // Exibe o nível de água no LCD (2ª linha)
+  lcd.setCursor(0, 1);
+  lcd.print("Agua: ");
+  lcd.print(average);
+  lcd.print(" ");
+  
+  // Converte o valor para String
+  String waterString = String(average);
+
+  // Publica o valor no broker MQTT
+  client.publish("2bqsvw6678/nivelAgua2505", waterString.c_str());
 }
