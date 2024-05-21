@@ -1,12 +1,12 @@
-# Projeto de Comunicação MQTT com ESP8266
+# Projeto de Comunicação MQTT com Arduino GIGA R1 WIFI
 
-Este é um projeto simples que demonstra como usar um ESP8266 para se comunicar através do protocolo MQTT, publicando mensagens em um tópico específico e subscrevendo a esse tópico para receber mensagens.
+Este é um projeto simples que demonstra como usar um Arduino para se comunicar através do protocolo MQTT, publicando mensagens em um tópico específico e subscrevendo a esse tópico para receber mensagens.
 
 ## Configuração do Ambiente
 
 ### Requisitos de Hardware
 
-- ESP8266
+- Arduino
 - Conexão com uma rede Wi-Fi
 
 ### Requisitos de Software
@@ -16,6 +16,8 @@ Este é um projeto simples que demonstra como usar um ESP8266 para se comunicar 
 - MQTTBox (ou outro cliente MQTT)
 
 ## Configuração do Código
+
+* Lembrando que esse código é o início do projeto
 
 ![Texto alternativo](src/public/images/codigo.png)
 
@@ -381,11 +383,13 @@ Certifique-se de que a cafeteira está conectada ao relé e que você está oper
 
 https://testclient-cloud.mqtt.cool/
 
-## Utilizando um Broker Cloud:
+# Utilizando um Broker Cloud:
 
 * Site: `https://www.emqx.com/en/mqtt/public-mqtt5-broker`
 
 http://www.emqx.io/online-mqtt-client#/recent_connections/31923e3f-de96-490a-bd1d-74450aeeea11
+
+* A forma de conexão com dados no Broker são os mesmos, só muda os dados
 
 * `Name`: `Cafeteira IoT`
 * `Client ID`: `mqttx_d544c2bf`
