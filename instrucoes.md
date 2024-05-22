@@ -260,5 +260,46 @@ Lê o nível de água, calcula a média das leituras, imprime no monitor serial 
 - **dht_sensor_getdata()** : Lê dados do sensor DHT11, imprime no monitor serial e publica no tópico MQTT. 
 - **water_sensor_getdata()** : Lê dados do sensor de nível de água, calcula a média, imprime no monitor serial e publica no tópico MQTT.
 
+### Funcionalidades
+
+- Este projeto Arduino possui várias funcionalidades que se integram para criar um sistema de monitoramento e controle remoto para uma cafeteira ou dispositivo similar. Aqui estão as principais funcionalidades:
+### 1. Conexão WiFi
+
+O projeto conecta o Arduino a uma rede WiFi usando as credenciais fornecidas (SSID e senha). Isso permite que o dispositivo se comunique com o broker MQTT e receba comandos remotos.
+### 2. Conexão MQTT
+
+O Arduino se conecta a um broker MQTT, permitindo a publicação e a subscrição de mensagens em tópicos específicos. Isso é essencial para a comunicação remota e a integração com outras plataformas e dispositivos IoT.
+### 3. Controle do Relé
+
+O projeto controla um relé, que pode ser usado para ligar e desligar a cafeteira ou outro dispositivo. O estado do relé pode ser alterado remotamente através de mensagens MQTT recebidas.
+### 4. Leitura de Sensores
+#### Sensor de Temperatura e Umidade (DHT11) 
+- **Leitura de Temperatura:**  O sensor DHT11 lê a temperatura ambiente. 
+- **Leitura de Umidade:**  O sensor DHT11 também lê a umidade relativa do ar. 
+- **Publicação dos Dados:**  Os valores de temperatura e umidade são publicados periodicamente em tópicos MQTT específicos.
+#### Sensor de Nível de Água 
+- **Leitura de Nível de Água:**  O sensor de nível de água lê a quantidade de água disponível na cafeteira. 
+- **Cálculo da Média:**  Para obter leituras mais estáveis, o código calcula a média de várias leituras. 
+- **Publicação dos Dados:**  O nível de água é publicado em um tópico MQTT específico.
+### 5. Callback para Mensagens MQTT
+
+O projeto inclui uma função de callback que processa mensagens recebidas nos tópicos subscritos. Dependendo da mensagem recebida ("ligar" ou "desligar"), o relé é acionado para ligar ou desligar a cafeteira.
+### 6. Feedback Visual
+
+Embora não utilizado diretamente neste projeto, há um pino configurado para um LED que pode ser usado para indicar o estado do sistema ou alertar sobre condições específicas (por exemplo, alta temperatura).
+### Resumo das Funcionalidades 
+1. **Conexão e Comunicação:** 
+- Conecta-se à rede WiFi.
+- Conecta-se a um broker MQTT.
+- Publica e subscreve a tópicos MQTT. 
+2. **Controle de Dispositivos:** 
+- Controle remoto do relé via MQTT. 
+3. **Monitoramento Ambiental:** 
+- Leitura de temperatura e umidade com o sensor DHT11.
+- Leitura do nível de água com um sensor de nível de água.
+- Publicação dos dados dos sensores em tópicos MQTT. 
+4. **Processamento de Mensagens:** 
+- Recebe e processa comandos MQTT para ligar e desligar o relé.
+
 ### Resumo
 Esse código conecta o Arduino a uma rede WiFi e a um broker MQTT, lê dados de sensores de temperatura, umidade e nível de água, e publica esses dados em tópicos MQTT. Também controla um relé através de mensagens recebidas via MQTT, permitindo o controle remoto de dispositivos conectados ao relé.
