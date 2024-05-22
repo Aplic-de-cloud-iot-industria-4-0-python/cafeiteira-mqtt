@@ -229,6 +229,79 @@ void water_sensor_getdata() {
 
 Lê o nível de água, calcula a média das leituras, imprime no monitor serial e publica o valor no tópico MQTT.
 
+## Configuração do Broker MQTT
+
+Abaixo estão as diferentes configurações para conectar o projeto a vários brokers MQTT na cloud. Comente ou descomente as seções relevantes no código para alternar entre os brokers.
+
+### 1. MQTTBox e NQTTX com Mosquitto
+
+```cpp
+const char *mqtt_broker = "test.mosquitto.org";  // Host do broker
+const char *topic = "grupo5/cafeteira";          // Tópico a ser subscrito e publicado
+const char *mqtt_username = "";                  // Usuário
+const char *mqtt_password = "";                  // Senha
+const int mqtt_port = 1883;                      // Porta
+```
+
+
+### 2. MQTTX
+
+```cpp
+const char *mqtt_broker = "broker.emqx.io";      // Host do broker
+const char *topic = "grupo5/cafeteira";          // Tópico a ser subscrito e publicado
+const char *mqtt_username = "2bqsvw6678";        // Usuário
+const char *mqtt_password = "0efiqruwxy";        // Senha
+const int mqtt_port = 8083;                      // Porta
+```
+
+
+### 3. IoTBind
+
+```cpp
+const char *mqtt_broker = "b37.mqtt.one";        // Host do broker
+const char *topic = "45eiqx7836";                // Tópico a ser subscrito e publicado
+const char *mqtt_username = "45eiqx7836";        // Usuário
+const char *mqtt_password = "357fgiuwyz";        // Senha
+const int mqtt_port = 1883;                      // Porta
+```
+
+
+### 4. MyQttHub
+
+```cpp
+const char *mqtt_broker = "node02.myqtthub.com"; // Host do broker
+const char *topic = "grupo5/myqtthub";           // Tópico a ser subscrito e publicado
+const char *mqtt_username = "estevam5s";         // Usuário
+const char *mqtt_password = "PX7ppiJ7-VBtBdAfH"; // Senha
+const char *client_id = "estevamsouzalaureth@gmail.com"; // Cliente ID
+const int mqtt_port = 8883;                      // Porta
+```
+
+## Estrutura do Código para cada Broker MQTT na cloud
+
+O código principal está dividido nas seguintes seções: 
+1. **Configuração do WiFi e MQTT** : Parâmetros de conexão para a rede WiFi e broker MQTT. 
+2. **Definição dos Sensores e Pinos** : Configuração dos sensores DHT11 e sensor de nível de água. 
+3. **Setup** : Inicialização da conexão WiFi e MQTT, configuração dos pinos, e inicialização dos sensores. 
+4. **Loop** : Atualização dos dados dos sensores, manutenção da conexão MQTT e publicação dos dados no broker.
+
+## Como Utilizar 
+1. **Configure a Rede WiFi** :
+Atualize as variáveis `ssid` e `password` com o nome e senha da sua rede WiFi. 
+2. **Escolha o Broker MQTT** :
+Comente ou descomente a seção relevante no código para selecionar o broker MQTT desejado. 
+3. **Carregue o Código no Microcontrolador** :
+Carregue o código atualizado no seu microcontrolador (ESP32, Arduino, etc.). 
+4. **Monitore os Dados** :
+Conecte-se ao broker MQTT utilizando uma ferramenta como MQTTBox, MQTTX, ou qualquer outro cliente MQTT para visualizar os dados publicados.
+
+## Exemplo de Uso
+Com o broker configurado, os dados de temperatura, umidade e nível de água serão publicados nos tópicos MQTT configurados. Por exemplo, para o broker `test.mosquitto.org`: 
+- Tópico para temperatura: `grupo5/cafeteira/temperatura` 
+- Tópico para umidade: `grupo5/cafeteira/umidade` 
+- Tópico para nível de água: `grupo5/cafeteira/nivelAgua`
+
+
 ### Documentação
 
 #### Bibliotecas 
