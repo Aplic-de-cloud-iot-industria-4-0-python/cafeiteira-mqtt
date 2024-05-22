@@ -1,12 +1,10 @@
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
 #include "DHT.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
 
 // Parametros de conexão WiFi e MQTT
-const char* ssid = "Penelopecharmosa"; // REDE
-const char* password = "13275274"; // SENHA
+const char* ssid = "pedacinhodoceu2.4g"; // REDE
+const char* password = "Pedacinho32377280"; // SENHA
 
 const char* mqtt_broker = "b37.mqtt.one"; // Host do broker
 const char* topic = "2bqsvw6678/"; // Tópico a ser subscrito e publicado
@@ -45,7 +43,7 @@ const int mqtt_port = 1883; // Porta
 // const int mqtt_port = 8883;                     // Porta
 
 // Pino do relé
-const int relayPin = 52; // Use o pino correto para o relé
+const int relayPin = 2; // Use o pino correto para o relé
 
 // DHT sensor
 #define DHTTYPE DHT11 // DHT 11
@@ -53,12 +51,8 @@ const int relayPin = 52; // Use o pino correto para o relé
 DHT dht(dht_dpin, DHTTYPE); 
 int LED = 7; // Ajuste o pino LED se necessário
 
-// LCD
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-
 // Sensor de água
 const int waterSensorPin = A1;  // Pino analógico onde o sensor de água está conectado
-int waterLevel;
 const int numReadings = 10;  // Número de leituras para fazer a média
 
 int readings[numReadings];   // Armazena as leituras analógicas
@@ -104,10 +98,6 @@ void setup() {
   // Inicializa o sensor DHT
   dht.begin();
   
-  // Inicializa o display LCD
-  lcd.init();
-  lcd.backlight();
-
   // Inicializa o sensor de água
   pinMode(waterSensorPin, INPUT);
   delay(100);
@@ -119,7 +109,7 @@ void setup() {
 }
 
 void loop() {
-  // Atualiza dados do sensor DHT e exibe no LCD
+  // Atualiza dados do sensor DHT
   dht_sensor_getdata();
   water_sensor_getdata();
   
@@ -195,17 +185,6 @@ void dht_sensor_getdata() {
     digitalWrite(LED, HIGH); // Desliga o LED se a temperatura for menor ou igual a 30 graus
   }
 
-  // Exibe os valores no LCD
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Temp: ");
-  lcd.print(temp);
-  lcd.print(" C");
-  lcd.setCursor(0, 1);
-  lcd.print("Umid: ");
-  lcd.print(hm);
-  lcd.print(" %");
-
   // Converte os valores para String
   String tempString = String(temp, 2);
   String humString = String(hm, 2);
@@ -236,18 +215,15 @@ void water_sensor_getdata() {
   // Calcula a média
   average = total / numReadings;
 
-  // Envia a média das leituras para o monitor serial
-  Serial.print("Nível de Água: ");
-  Serial.println(average);
+  // Converte a leitura analógica para um valor percentual
+  float waterPercentage = (average / 1023.0) * 100;
 
-  // Exibe o nível de água no LCD (2ª linha)
-  lcd.setCursor(0, 1);
-  lcd.print("Agua: ");
-  lcd.print(average);
-  lcd.print(" ");
-  
+  // Envia a média das leituras para o monitor serial
+  Serial.print("Nível de Água (%): ");
+  Serial.println(waterPercentage);
+
   // Converte o valor para String
-  String waterString = String(average);
+  String waterString = String(waterPercentage, 2);
 
   // Publica o valor no broker MQTT
   client.publish("2bqsvw6678/nivelAgua2505", waterString.c_str());
