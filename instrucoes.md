@@ -229,5 +229,36 @@ void water_sensor_getdata() {
 
 Lê o nível de água, calcula a média das leituras, imprime no monitor serial e publica o valor no tópico MQTT.
 
+### Documentação
+
+#### Bibliotecas 
+- **DHT.h** : Para ler dados do sensor de temperatura e umidade DHT11. 
+- **WiFi.h** : Para conectar o Arduino à rede WiFi. 
+- **PubSubClient.h** : Para comunicação com o broker MQTT.
+
+#### Parâmetros de Conexão 
+- **WiFi** : Nome da rede (`ssid`) e senha (`password`). 
+- **MQTT** : Endereço do broker (`mqtt_broker`), porta (`mqtt_port`), tópico (`topic`), nome de usuário (`mqtt_username`), e senha (`mqtt_password`).
+
+#### Configuração de Pinos 
+- **relayPin** : Pino conectado ao relé. 
+- **dht_dpin** : Pino de dados do sensor DHT11. 
+- **waterSensorPin** : Pino analógico para o sensor de nível de água.
+
+#### Variáveis e Objetos 
+- **dht** : Objeto para o sensor DHT11. 
+- **readings, readIndex, total, average** : Variáveis para leituras e média do sensor de água. 
+- **mqttStatus, relayState** : Variáveis para estados do MQTT e do relé. 
+- **wifiClient, client** : Objetos para cliente WiFi e MQTT.
+
+#### Funções 
+- **setup()** : Configura a conexão WiFi e MQTT, inicializa sensores e relé. 
+- **loop()** : Atualiza dados dos sensores, mantém a conexão MQTT ativa, e adiciona um delay para evitar leituras muito frequentes. 
+- **connectMQTT()** : Tenta conectar ao broker MQTT e retorna o status da conexão. 
+- **callback()** : Processa mensagens recebidas no tópico MQTT e controla o relé. 
+- **toggleRelay()** : Alterna o estado do relé e publica o novo estado no tópico MQTT. 
+- **dht_sensor_getdata()** : Lê dados do sensor DHT11, imprime no monitor serial e publica no tópico MQTT. 
+- **water_sensor_getdata()** : Lê dados do sensor de nível de água, calcula a média, imprime no monitor serial e publica no tópico MQTT.
+
 ### Resumo
 Esse código conecta o Arduino a uma rede WiFi e a um broker MQTT, lê dados de sensores de temperatura, umidade e nível de água, e publica esses dados em tópicos MQTT. Também controla um relé através de mensagens recebidas via MQTT, permitindo o controle remoto de dispositivos conectados ao relé.
