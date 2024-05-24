@@ -12,36 +12,6 @@ const char* mqtt_username = "2bqsvw6678"; // Usuário
 const char* mqtt_password = "0efiqruwxy"; // Senha
 const int mqtt_port = 1883; // Porta
 
-// MQTT Broker com MQTTBox e NQTTX com mosquitto -> Conectado
-// const char *mqtt_broker = "test.mosquitto.org";  // Host do broker
-// const char *topic = "grupo5/cafeteira";            // Tópico a ser subscrito e publicado
-// const char *mqtt_username = "";                 // Usuário
-// const char *mqtt_password = "";                 // Senha
-// const int mqtt_port = 1883;                     // Porta
-
-// MQTTX
-// const char *mqtt_broker = "broker.emqx.io";  // Host do broker
-// const char *topic = "grupo5/cafeteira";            // Tópico a ser subscrito e publicado
-// const char *mqtt_username = "2bqsvw6678";                 // Usuário
-// const char *mqtt_password = "0efiqruwxy";                 // Senha
-// // const char *client_id = "mqttx_80be1b8f";                 // Senha
-// const int mqtt_port = 8083;                     // Porta
-
-// // iotbind -> Utilizar o app do IoTBind
-// const char *mqtt_broker = "b37.mqtt.one";  // Host do broker
-// const char *topic = "45eiqx7836";            // Tópico a ser subscrito e publicado
-// const char *mqtt_username = "45eiqx7836";                 // Usuário
-// const char *mqtt_password = "357fgiuwyz";                 // Senha
-// const int mqtt_port = 1883;                     // Porta
-
-// // myqtthub -> Utilizar o app do IoTBind
-// const char *mqtt_broker = "node02.myqtthub.com";  // Host do broker
-// const char *topic = "grupo5/myqtthub";            // Tópico a ser subscrito e publicado
-// const char *mqtt_username = "estevam5s";                 // Usuário
-// const char *mqtt_password = "PX7ppiJ7-VBtBdAfH";                 // Senha
-// const char *client_id = "estevamsouzalaureth@gmail.com";                 // Senha
-// const int mqtt_port = 8883;                     // Porta
-
 // Pino do relé
 const int relayPin = 2; // Use o pino correto para o relé
 
