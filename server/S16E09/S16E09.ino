@@ -13,7 +13,7 @@ const char* mqtt_password = "0efiqruwxy"; // Senha
 const int mqtt_port = 1883; // Porta
 
 // Pino do relé
-const int relayPin = 2; // Use o pino correto para o relé
+const int relayPin = 52; // Use o pino correto para o relé
 
 // DHT sensor
 #define DHTTYPE DHT11 // DHT 11
