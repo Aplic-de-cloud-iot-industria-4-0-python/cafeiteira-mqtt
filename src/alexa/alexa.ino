@@ -4,53 +4,70 @@
 #include "DHT.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include "SinricPro.h"
+#include "SinricProSwitch.h"
+#include "SinricProTemperaturesensor.h"
 
 // Parametros de conexão WiFi e MQTT
-const char *ssid = "Penelopecharmosa";    // REDE
-const char *password = "13275274";        // SENHA
-const char *mqtt_broker = "b37.mqtt.one"; // Host do broker
-const char *topic = "2bqsvw6678/";        // Tópico a ser subscrito e publicado
-const char *mqtt_username = "2bqsvw6678"; // Usuário
-const char *mqtt_password = "0efiqruwxy"; // Senha
-const int mqtt_port = 1883;               // Porta
+const char *ssid = "Penelopecharmosa";
+const char *password = "13275274";
+const char *mqtt_broker = "b37.mqtt.one";
+const char *topic = "2bqsvw6678/";
+const char *mqtt_username = "2bqsvw6678";
+const char *mqtt_password = "0efiqruwxy";
+const int mqtt_port = 1883;
 
-#define BUTTON_PIN 13       // Pino do botão
-#define DHTPIN 0            // Pino de dados do DHT11
-#define DHTTYPE DHT11       // Tipo de sensor DHT (DHT11 ou DHT22)
-#define WATER_SENSOR_PIN A0 // Pino analógico onde o sensor de água está conectado
-#define CONTRAST_PIN A2     // Pino do potenciômetro para controlar o contraste do LCD
-#define RED_LED_PIN 4       // LED vermelho
-#define YELLOW_LED_PIN 3    // LED amarelo
-#define GREEN_LED_PIN 2     // LED verde
-#define RELAY_PIN 52        // Pino do relé
+// Parametros SinricPro
+#define APP_KEY "95a76b9e-104f-4df1-893d-4367e854e948"
+#define APP_SECRET "1704576a-48a1-4eda-b9e5-e6e5e69654bb-aa4363e2-22a5-46cb-9e90-b3adde88e9af"
+#define SWITCH_ID_1 "6654c189888aa7f7a230371d"
+#define TEMP_SENSOR_ID "6654d1ad5d818a66fab14c68"
+#define RELAYPIN_1 52
+#define DHT_PIN 0
+#define DHT_TYPE DHT11
+#define BAUD_RATE 115200
+#define EVENT_WAIT_TIME 60000
+
+// Definições de pinos
+#define BUTTON_PIN 13
+#define WATER_SENSOR_PIN A0
+#define CONTRAST_PIN A2
+#define RED_LED_PIN 4
+#define YELLOW_LED_PIN 3
+#define GREEN_LED_PIN 2
 
 // Variáveis de Leitura de Água
-const int numReadings = 10; // Número de leituras para fazer a média
-int readings[numReadings];  // Armazena as leituras analógicas
-int readIndex = 0;          // Índice da leitura atual
-int total = 0;              // Soma das leituras
-int average = 0;            // Média das leituras
+const int numReadings = 10;
+int readings[numReadings];
+int readIndex = 0;
+int total = 0;
+int average = 0;
 
 // Variáveis de Estado
 bool mqttStatus = false;
-bool relayState = false;        // Estado inicial do relé (desligado)
-bool displayTempHum = true;     // Variável para alternar entre exibir temperatura e umidade e "Hello World"
-bool displayWaterLevel = false; // Variável para alternar entre exibir nível de água e outras informações
-bool coffeeMakerOn = false;     // Variável para indicar o estado da cafeteira
+bool relayState = false;
+bool displayTempHum = true;
+bool displayWaterLevel = false;
+bool coffeeMakerOn = false;
 bool displayHello = false;
-
-// Variável para rastrear o tempo
-unsigned long lastDisplayTime = 0;           // Tempo da última atualização da exibição
-const unsigned long displayInterval = 10000; // Intervalo de 10 segundos
+unsigned long lastDisplayTime = 0;
+const unsigned long displayInterval = 10000;
+unsigned long lastEvent = (-EVENT_WAIT_TIME);
 
 // Variáveis de debounce
 unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
-// Objetos
+// Variáveis SinricPro
+bool deviceIsOn = true;
+float temperature = 0;
+float humidity = 0;
+float lastTemperature = 0;
+float lastHumidity = 0;
+
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
-DHT dht(DHTPIN, DHTTYPE);
+DHT dht(DHT_PIN, DHT_TYPE);
 hd44780_I2Cexp lcd;
 
 // Protótipos
@@ -61,16 +78,37 @@ void dht_sensor_getdata();
 void water_sensor_getdata();
 void displayCoffeeMakerState();
 void displayHelloWorld();
+void handleTemperaturesensor();
+void setupWiFi();
+void setupSinricPro();
+
+// Funções SinricPro
+bool onPowerState1(const String &deviceId, bool &state)
+{
+  Serial.print("Device 1 turned ");
+  Serial.println(state ? "on" : "off");
+  digitalWrite(RELAYPIN_1, state ? HIGH : LOW);
+  coffeeMakerOn = state;
+  displayCoffeeMakerState();
+  return true;
+}
+
+bool onPowerState(const String &deviceId, bool &state)
+{
+  Serial.print("Temperaturesensor turned ");
+  Serial.print(state ? "on" : "off");
+  Serial.println(" (via SinricPro)");
+  deviceIsOn = state;
+  return true;
+}
 
 void setup()
 {
-  Serial.begin(9600);
-
-  // Inicializa o sensor DHT
+  Serial.begin(BAUD_RATE);
   dht.begin();
 
   // Inicializa o LCD
-  lcd.begin(16, 2); // Definindo 16 colunas e 2 linhas
+  lcd.begin(16, 2);
 
   // Inicializa o pino do botão
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -78,14 +116,8 @@ void setup()
   // Inicializa o pino de controle do contraste do LCD
   pinMode(CONTRAST_PIN, INPUT);
 
-  // Inicialização da conexão WiFi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.print(".");
-    delay(1000);
-  }
-  Serial.println("Conectado à rede WiFi!");
+  setupWiFi();
+  setupSinricPro();
 
   // Inicialização da conexão MQTT
   client.setServer(mqtt_broker, mqtt_port);
@@ -93,8 +125,8 @@ void setup()
   mqttStatus = connectMQTT();
 
   // Configuração do pino do relé
-  pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW); // Desliga o relé inicialmente
+  pinMode(RELAYPIN_1, OUTPUT);
+  digitalWrite(RELAYPIN_1, LOW);
 
   // Configura os pinos dos LEDs como saída
   pinMode(RED_LED_PIN, OUTPUT);
@@ -117,6 +149,9 @@ void setup()
 
 void loop()
 {
+  SinricPro.handle();
+  handleTemperaturesensor();
+
   // Atualiza dados do sensor DHT
   dht_sensor_getdata();
   water_sensor_getdata();
@@ -135,7 +170,6 @@ void loop()
   unsigned long currentTime = millis();
   if (currentTime - lastDisplayTime >= displayInterval)
   {
-    // Atualiza o tempo da última exibição
     lastDisplayTime = currentTime;
 
     // Alterna entre os modos de exibição
@@ -167,21 +201,19 @@ void loop()
     }
     else
     {
-      displayHelloWorld(); // Chama a função para exibir "Hello World"
+      displayHelloWorld();
     }
   }
 
   // Verifica se o botão foi pressionado
   if (digitalRead(BUTTON_PIN) == LOW)
   {
-    // Aguarda até que o botão seja liberado
     while (digitalRead(BUTTON_PIN) == LOW)
     {
       delay(10);
     }
   }
 
-  // Adiciona um pequeno delay para evitar leituras muito frequentes
   delay(1000);
 }
 
@@ -194,7 +226,7 @@ bool connectMQTT()
     {
       Serial.println("Conexão bem-sucedida ao broker MQTT!");
       client.subscribe(topic);
-      client.subscribe(topic); // Adiciona a assinatura ao tópico do relé
+      client.subscribe(topic);
       return true;
     }
     else
@@ -235,7 +267,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     {
       coffeeMakerOn = false;
     }
-    displayCoffeeMakerState(); // Atualiza a exibição quando o estado do relé mudar
+    displayCoffeeMakerState();
   }
 
   if (message.equals("ligar"))
@@ -251,62 +283,62 @@ void callback(char *topic, byte *payload, unsigned int length)
 void toggleRelay(bool state)
 {
   relayState = state;
-  digitalWrite(RELAY_PIN, state ? LOW : HIGH);
+  digitalWrite(RELAYPIN_1, state ? HIGH : LOW);
   client.publish(topic, state ? "ligado" : "desligado");
 }
 
 void dht_sensor_getdata()
 {
-  float hm = dht.readHumidity();
-  Serial.print("Umidade: ");
-  Serial.println(hm);
-  float temp = dht.readTemperature();
-  Serial.print("Temperatura: ");
-  Serial.println(temp);
+  temperature = dht.readTemperature();
+  humidity = dht.readHumidity();
 
-  // Exibe a temperatura e umidade no LCD
+  if (isnan(temperature) || isnan(humidity))
+  {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+  Serial.print("Umidade: ");
+  Serial.println(humidity);
+  Serial.print("Temperatura: ");
+  Serial.println(temperature);
+
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Temp: ");
-  lcd.print(temp);
+  lcd.print(temperature);
   lcd.print(" C");
 
   lcd.setCursor(0, 1);
   lcd.print("Umidade: ");
-  lcd.print(hm);
+  lcd.print(humidity);
   lcd.print(" %");
 
-  // Atualiza o LED com base na umidade e temperatura lidas
-  if (temp > 30.0)
+  if (temperature > 30.0)
   {
-    digitalWrite(GREEN_LED_PIN, LOW); // Liga o LED se a temperatura for maior que 30 graus
+    digitalWrite(GREEN_LED_PIN, LOW);
   }
   else
   {
-    digitalWrite(GREEN_LED_PIN, HIGH); // Desliga o LED se a temperatura for menor ou igual a 30 graus
+    digitalWrite(GREEN_LED_PIN, HIGH);
   }
 
-  // Converte os valores para String
-  String tempString = String(temp, 2);
-  String humString = String(hm, 2);
+  String tempString = String(temperature, 2);
+  String humString = String(humidity, 2);
 
-  // Publica os valores no broker MQTT
   client.publish("2bqsvw6678/temperatura2505", tempString.c_str());
   client.publish("2bqsvw6678/humidade2505", humString.c_str());
 }
 
 void water_sensor_getdata()
 {
-  // Remove a leitura mais antiga e adiciona a nova leitura
   total -= readings[readIndex];
   readings[readIndex] = analogRead(WATER_SENSOR_PIN);
   total += readings[readIndex];
   readIndex = (readIndex + 1) % numReadings;
 
-  // Calcula a média das leituras
   average = total / numReadings;
 
-  // Converte o valor da média para um valor percentual
   float waterPercentage = (average / 1023.0) * 100;
 
   lcd.clear();
@@ -316,14 +348,11 @@ void water_sensor_getdata()
   lcd.print(waterPercentage);
   lcd.print(" %");
 
-  // Envia a média das leituras para o monitor serial
   Serial.print("Nível de Água (%): ");
   Serial.println(waterPercentage);
 
-  // Converte o valor para String
   String waterString = String(waterPercentage, 2);
 
-  // Controle dos LEDs baseado no nível de água
   if (waterPercentage >= 0 && waterPercentage <= 25)
   {
     digitalWrite(RED_LED_PIN, HIGH);
@@ -343,7 +372,6 @@ void water_sensor_getdata()
     digitalWrite(GREEN_LED_PIN, HIGH);
   }
 
-  // Publica o valor no broker MQTT
   client.publish("2bqsvw6678/nivelAgua2505", waterString.c_str());
 }
 
@@ -359,7 +387,6 @@ void displayCoffeeMakerState()
     lcd.print("Cafe: Desligado");
   }
 
-  // Exibe o estado da cafeteira no Monitor Serial para debug
   Serial.print("Cafeteira: ");
   if (coffeeMakerOn)
   {
@@ -373,16 +400,86 @@ void displayCoffeeMakerState()
 
 void displayHelloWorld()
 {
-  // Exibe "Hello World" no LCD
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Hoje tem cafe?");
 
-  // Apaga todos os LEDs quando exibindo "Hello World"
   digitalWrite(RED_LED_PIN, LOW);
   digitalWrite(YELLOW_LED_PIN, LOW);
   digitalWrite(GREEN_LED_PIN, LOW);
 
-  // Exibe o estado da cafeteira
   displayCoffeeMakerState();
+}
+
+void handleTemperaturesensor()
+{
+  if (!deviceIsOn)
+    return;
+
+  unsigned long actualMillis = millis();
+  if (actualMillis - lastEvent < EVENT_WAIT_TIME)
+    return;
+
+  temperature = dht.readTemperature();
+  humidity = dht.readHumidity();
+
+  if (isnan(temperature) || isnan(humidity))
+  {
+    Serial.println("DHT reading failed!");
+    return;
+  }
+
+  if (temperature == lastTemperature && humidity == lastHumidity)
+    return;
+
+  SinricProTemperaturesensor &mySensor = SinricPro[TEMP_SENSOR_ID];
+  bool success = mySensor.sendTemperatureEvent(temperature, humidity);
+  if (success)
+  {
+    Serial.print("Temperature: ");
+    Serial.print(temperature);
+    Serial.print(" Celsius\tHumidity: ");
+    Serial.print(humidity);
+    Serial.println("%");
+  }
+  else
+  {
+    Serial.println("Something went wrong...could not send Event to server!");
+  }
+
+  lastTemperature = temperature;
+  lastHumidity = humidity;
+  lastEvent = actualMillis;
+}
+
+void setupWiFi()
+{
+  Serial.print("\r\n[Wifi]: Connecting");
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print(".");
+    delay(250);
+  }
+  IPAddress localIP = WiFi.localIP();
+  Serial.print("connected!\r\n[WiFi]: IP-Address is ");
+  Serial.println(localIP);
+}
+
+void setupSinricPro()
+{
+  pinMode(RELAYPIN_1, OUTPUT);
+  SinricProSwitch &mySwitch1 = SinricPro[SWITCH_ID_1];
+  mySwitch1.onPowerState(onPowerState1);
+
+  SinricProTemperaturesensor &mySensor = SinricPro[TEMP_SENSOR_ID];
+  mySensor.onPowerState(onPowerState);
+
+  SinricPro.onConnected([]()
+                        { Serial.println("Connected to SinricPro"); });
+  SinricPro.onDisconnected([]()
+                           { Serial.println("Disconnected from SinricPro"); });
+
+  SinricPro.begin(APP_KEY, APP_SECRET);
 }
