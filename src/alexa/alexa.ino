@@ -30,7 +30,7 @@
 #define EVENT_WAIT_TIME 60000
 
 #ifdef ESP8266
-#define DHT_PIN A0
+#define DHT_PIN D0
 #define RELAY_PIN D1
 #endif
 #ifdef ESP32
