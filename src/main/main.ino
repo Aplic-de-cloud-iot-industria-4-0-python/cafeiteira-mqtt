@@ -6,8 +6,8 @@
 #include <PubSubClient.h>
 
 // Parametros de conexão WiFi e MQTT
-const char *ssid = "Penelopecharmosa";    // REDE
-const char *password = "13275274";        // SENHA
+const char *ssid = "ZENAIDE.2G";          // REDE
+const char *password = "32377280";        // SENHA
 const char *mqtt_broker = "b37.mqtt.one"; // Host do broker
 const char *topic = "2bqsvw6678/";        // Tópico a ser subscrito e publicado
 const char *mqtt_username = "2bqsvw6678"; // Usuário
@@ -248,6 +248,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
 }
 
+// Torcar os valores do Relay
 void toggleRelay(bool state)
 {
   relayState = state;
