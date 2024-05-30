@@ -248,7 +248,6 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
 }
 
-// Torcar os valores do Relay
 void toggleRelay(bool state)
 {
   relayState = state;

@@ -16,10 +16,10 @@
 #include "SinricProTemperaturesensor.h"
 #include "SinricProSwitch.h"
 
-#include <DHT.h>;
+#include <DHT.h>
 
-#define WIFI_SSID "ZENAIDE.2G"
-#define WIFI_PASS "32377280"
+#define WIFI_SSID "Penelopecharmosa"
+#define WIFI_PASS "13275274"
 
 #define APP_KEY "95a76b9e-104f-4df1-893d-4367e854e948"
 #define APP_SECRET "1704576a-48a1-4eda-b9e5-e6e5e69654bb-aa4363e2-22a5-46cb-9e90-b3adde88e9af"
