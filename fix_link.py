@@ -12,7 +12,11 @@ lib_json = r"""{
 }
 """
 FRAMEWORK_DIR = env.PioPlatform().get_package_dir("framework-arduino-mbed")
-target_file = join(FRAMEWORK_DIR, "libraries", "rpclib" , "library.json")
+
+if FRAMEWORK_DIR is None:
+    raise ValueError("O pacote 'framework-arduino-mbed' não foi encontrado. Certifique-se de que ele está instalado corretamente.")
+
+target_file = join(FRAMEWORK_DIR, "libraries", "rpclib", "library.json")
 if not isfile(target_file):
     # put it in there
     with open(target_file, "w") as fp:
@@ -20,7 +24,7 @@ if not isfile(target_file):
     print("[+] Saved library.json for RPCLib fix.")
 
 # Fix linking by declaring start and end properly
-for e in env, DefaultEnvironment():
+for e in (env, DefaultEnvironment()):
     # This env-variables are set for 50_50 flash-layout
     # defines = [("CM4_BINARY_START", "0x08100000"), ("CM4_BINARY_END", "0x08200000")]
     # This env-variables are set for 75_25 flash-layout
